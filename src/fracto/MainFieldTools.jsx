@@ -7,9 +7,18 @@ import ToolHeader from './mainfield/ToolHeader';
 
 import FieldHarvest from './mainfield/FieldHarvest';
 import FieldTransit from './mainfield/FieldTransit';
+import FieldBailiwicks from './mainfield/FieldBailiwicks';
+import FieldBurrows from "./mainfield/FieldBurrows";
+import FieldTest from "./mainfield/FieldTest";
+import FieldSquares from "./mainfield/FieldSquares";
+
 import {
    FIELD_TYPE_HARVEST,
-   FIELD_TYPE_TRANSIT
+   FIELD_TYPE_TRANSIT,
+   FIELD_TYPE_BAILIWICKS,
+   FIELD_TYPE_BURROWS,
+   FIELD_TYPE_TEST,
+   FIELD_TYPE_SQUARES,
 } from "./SidebarTools";
 
 const ToolField = styled(CoolStyles.Block)`
@@ -41,6 +50,14 @@ export class MainFieldTools extends Component {
             return <FieldHarvest width_px={width_px}/>
          case FIELD_TYPE_TRANSIT:
             return <FieldTransit width_px={width_px}/>
+         case FIELD_TYPE_BAILIWICKS:
+            return <FieldBailiwicks width_px={width_px}/>
+         case FIELD_TYPE_BURROWS:
+            return <FieldBurrows width_px={width_px}/>
+         case FIELD_TYPE_TEST:
+            return <FieldTest width_px={width_px}/>
+         case FIELD_TYPE_SQUARES:
+            return <FieldSquares width_px={width_px}/>
          default:
             console.log("unknown tool", tool_specifier)
             break;

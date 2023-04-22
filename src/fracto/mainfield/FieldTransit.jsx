@@ -7,7 +7,6 @@ import {CoolStyles} from 'common/ui/CoolImports';
 import FractoData, {BIN_VERB_INDEXED} from 'fracto/common/data/FractoData';
 import FractoDataLoader from 'fracto/common/data/FractoDataLoader';
 import FractoCommon from 'fracto/common/FractoCommon';
-import FractoRasterCanvas from 'fracto/common/data/FractoRasterCanvas';
 
 import FractoTileAutomate, {
    CONTEXT_SIZE_PX,
@@ -82,7 +81,6 @@ export class FieldTransit extends Component {
       const active_tile = all_tiles[tile_index]
       let details_block = [];
       const details_width_px = width_px - (CONTEXT_SIZE_PX + TILE_SIZE_PX) - 40 - 2 * WRAPPER_MARGIN_PX;
-      let rastered = []
       if (active_tile) {
          details_block = <CoolStyles.InlineBlock style={{width: `${details_width_px}px`}}>
             <FractoTileDetails
@@ -90,18 +88,6 @@ export class FieldTransit extends Component {
                width_px={details_width_px}
             />
          </CoolStyles.InlineBlock>
-         const tile_scope = active_tile.bounds.left - active_tile.bounds.right
-         const focal_point = {
-            x: (active_tile.bounds.right + active_tile.bounds.left) / 2,
-            y: (active_tile.bounds.top + active_tile.bounds.bottom) / 2
-         }
-         rastered = <FractoRasterCanvas
-            width_px={100}
-            level={level - 1}
-            aspect_ratio={1.0}
-            scope={tile_scope}
-            focal_point={focal_point}
-         />
       }
       const level_block = <CoolStyles.Block style={{marginBottom: `0.5rem`}}>
          <LevelPrompt>{`level:`}</LevelPrompt>
@@ -126,7 +112,6 @@ export class FieldTransit extends Component {
          <DetailsWrapper style={{width: `${details_width_px}px`}}>
             {details_block}
             {level_block}
-            {/*{rastered}*/}
          </DetailsWrapper>
       </FieldWrapper>
    }
