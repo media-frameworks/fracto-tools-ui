@@ -1,42 +1,29 @@
-import {Component} from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
-import {CoolButton, CoolTabs, CoolColors, CoolStyles} from 'common/ui/CoolImports';
-import StoreS3 from 'common/system/StoreS3';
+import {CoolColors, CoolButton, CoolTabs, CoolStyles} from 'common/ui/CoolImports';
+// import StoreS3 from 'common/system/StoreS3';
 
 import FractoUtil from "../common/FractoUtil";
 import FractoCommon from "../common/FractoCommon";
 import {render_coordinates} from '../common/FractoStyles';
 
+import FractoMruCache from "../common/data/FractoMruCache";
 import FractoLayeredCanvas from "../common/data/FractoLayeredCanvas";
 import FractoData from "../common/data/FractoData";
 import FractoDataLoader from "../common/data/FractoDataLoader";
 import {BIN_VERB_INDEXED, get_ideal_level} from "../common/data/FractoData";
+import BailiwickList from "./bailiwicks/BailiwickList";
+import BailiwickData from "./bailiwicks/BailiwickData";
+import BailiwickPointsList from "./bailiwicks/BailiwickPointsList";
 
 const BAILIWICK_SIZE_PX = 650;
 const BAILIWICKS_LIST_WIDTH_PX = 300;
 const BAILIWICK_MAX_SIZE = 4096;
 
-const FRACTO_DB_URL = 'http://127.0.0.1:3001';
-
 const FieldWrapper = styled(CoolStyles.Block)`
    margin: 0;
-`;
-
-const RowWrapper = styled(CoolStyles.Block)`
-   ${CoolStyles.pointer}
-   vertical-align: center;
-   padding: 0.125rem;
-   &: hover{
-      background-color: #eeeeee;
-   }
-`;
-
-const BlockWrapper = styled(CoolStyles.InlineBlock)`
-   ${CoolStyles.align_center}
-   width: 2.5rem;
-   vertical-align: center;
 `;
 
 const ListWrapper = styled(CoolStyles.InlineBlock)`
@@ -72,30 +59,8 @@ const NodePointRow = styled(CoolStyles.Block)`
    color: black;
 `;
 
-const NameWrapper = styled(CoolStyles.InlineBlock)`
-   ${CoolStyles.bold}
-   ${CoolStyles.italic}
-   ${CoolStyles.ellipsis}
-   line-height: 1.5rem;
-   letter-spacing: 0.1rem;
-   width: 13rem;
-   font-size: 0.9rem;
-   margin-left: 0.5rem;
-   color: #666666;
-`;
-
 const HarvestButtonWrapper = styled(CoolStyles.InlineBlock)`
    margin-left: 1rem;
-`;
-
-const PatternBlock = styled(CoolStyles.InlineBlock)`
-   ${CoolStyles.monospace}
-   font-size: 1.25rem;
-   border: 0.1rem solid #666666;
-   border-radius: 0.25rem;
-   color: white;
-   padding: 0.25rem 0.125rem 0.125rem;
-   line-height: 1rem;
 `;
 
 const BailiwickNameSpan = styled(CoolStyles.InlineBlock)`
@@ -106,15 +71,21 @@ const BailiwickNameSpan = styled(CoolStyles.InlineBlock)`
    margin-bottom: 0.25rem;
 `;
 
-const FRACTO_COLOR_ITERATIONS = 200;
+const DetectLink = styled(CoolStyles.Block)`
+   ${CoolStyles.link}
+   ${CoolStyles.bold}
+   color: ${CoolColors.cool_blue};
+   margin: 0.5rem;
+   &: hover{
+      ${CoolStyles.underline}
+   }
+`;
 
-const render_pattern_block = (pattern) => {
-   const pattern_color = FractoUtil.fracto_pattern_color(pattern, FRACTO_COLOR_ITERATIONS);
-   return <PatternBlock
-      style={{backgroundColor: pattern_color}}>
-      {pattern}
-   </PatternBlock>
-}
+const DetectPrompt = styled(CoolStyles.Block)`
+   ${CoolStyles.italic}
+   color: ${CoolColors.deep_blue};
+   margin: 0.5rem;
+`;
 
 export class FieldBailiwicks extends Component {
 
@@ -124,7 +95,6 @@ export class FieldBailiwicks extends Component {
 
    state = {
       all_bailiwicks: [],
-      node_points: [],
       selected_bailiwick: null,
       loading: true,
       level_tab_index: 0,
@@ -133,108 +103,19 @@ export class FieldBailiwicks extends Component {
       tiles_2: [],
       tiles_3: [],
       harvest_mode: false,
-      hover_point: null
+      hover_point: null,
+      in_detect: false,
+      wrapper_ref: React.createRef(),
+      detect_iteration: 0,
+      detect_pattern: 0,
+      detect_x: 0,
+      detect_y: 0,
+      display_settings: {}
    };
 
    componentDidMount() {
       FractoDataLoader.load_tile_set_async(BIN_VERB_INDEXED, result => {
          this.setState({loading: false});
-      });
-      this.fetch_bailiwicks()
-      this.fetch_node_points()
-   }
-
-   fetch_bailiwicks = () => {
-      const url = `${FRACTO_DB_URL}/free_bailiwicks`
-      fetch(url)
-         .then(response => response.text())
-         .then((str) => {
-            const all_bailiwicks = JSON.parse(str)
-               .sort((a, b) => b.magnitude - a.magnitude)
-            console.log("all_bailiwicks", all_bailiwicks)
-            this.setState({all_bailiwicks: all_bailiwicks})
-            this.select_bailiwick(all_bailiwicks[0], 0)
-         })
-   }
-
-   fetch_node_points = () => {
-      const url = `${FRACTO_DB_URL}/node_points`
-      fetch(url)
-         .then(response => response.text())
-         .then((str) => {
-            const node_points = JSON.parse(str)
-            console.log("node_points", node_points)
-            this.setState({node_points: node_points})
-         })
-   }
-   //
-   // save_bailiwick = (bailiwick, bailiwick_index, cb) => {
-   //    const url = `${FRACTO_DB_URL}/new_free_bailiwick`;
-   //    const highest_level = get_ideal_level(BAILIWICK_MAX_SIZE, bailiwick.display_settings.scope, 1.5);
-   //    const bailiwick_name = FractoUtil.bailiwick_name(bailiwick.pattern, bailiwick.core_point, highest_level)
-   //    const cq_code = FractoUtil.CQ_code_from_point(bailiwick.core_point.x, bailiwick.core_point.y)
-   //    const display_level = get_ideal_level(BAILIWICK_SIZE_PX, bailiwick.display_settings.scope, 2.5);
-   //    const data = {
-   //       name: bailiwick_name,
-   //       CQ_code: cq_code.slice(0, 25),
-   //       pattern: bailiwick.pattern,
-   //       best_level: display_level,
-   //       free_ordinal: bailiwick_index + 1,
-   //       magnitude: bailiwick.magnitude,
-   //       core_point: JSON.stringify(bailiwick.core_point),
-   //       octave_point: JSON.stringify(bailiwick.octave_point),
-   //       display_settings: JSON.stringify(bailiwick.display_settings),
-   //       registry_filename: bailiwick.registry_filename
-   //    }
-   //    const data_keys = Object.keys(data)
-   //    const encoded_params = data_keys.map(key => {
-   //       return `${key}=${data[key]}`
-   //    })
-   //    const data_url = `${url}?${encoded_params.join('&')}`
-   //    fetch(data_url, {
-   //       body: JSON.stringify(data), // data you send.
-   //       headers: {'Content-Type': 'application/json'},
-   //       method: 'POST',
-   //       mode: 'no-cors', // no-cors, cors, *same-origin
-   //    }).then(function (response) {
-   //       if (response.body) {
-   //          return response.json();
-   //       }
-   //       return ["ok"];
-   //    }).then(function (json_data) {
-   //       console.log("save_bailiwick", url, json_data)
-   //       cb(`saved ${bailiwick_name}`)
-   //    });
-   // }
-
-   save_node_point = (node_point, bailiwick_name, root, cb) => {
-      const url = `${FRACTO_DB_URL}/new_node_point`;
-      const location = {x: node_point.x, y: node_point.y}
-      const data = {
-         bailiwick_name: bailiwick_name,
-         pattern: node_point.pattern,
-         location: JSON.stringify(location),
-         short_form: FractoUtil.fracto_designation(root, node_point.pattern, true),
-         long_form: FractoUtil.fracto_designation(root, node_point.pattern, false),
-      }
-      const data_keys = Object.keys(data)
-      const encoded_params = data_keys.map(key => {
-         return `${key}=${data[key]}`
-      })
-      const data_url = `${url}?${encoded_params.join('&')}`
-      fetch(data_url, {
-         body: JSON.stringify(data), // data you send.
-         headers: {'Content-Type': 'application/json'},
-         method: 'POST',
-         mode: 'no-cors', // no-cors, cors, *same-origin
-      }).then(function (response) {
-         if (response.body) {
-            return response.json();
-         }
-         return ["ok"];
-      }).then(function (json_data) {
-         console.log("save_node_point", data_url, json_data)
-         cb(`saved ${bailiwick_name}`)
       });
    }
 
@@ -245,7 +126,7 @@ export class FieldBailiwicks extends Component {
       FractoData.get_cached_tiles(highest_level - 1, BIN_VERB_INDEXED)
       FractoData.get_cached_tiles(highest_level - 2, BIN_VERB_INDEXED)
       FractoData.get_cached_tiles(highest_level - 3, BIN_VERB_INDEXED)
-      const display_level = get_ideal_level(BAILIWICK_SIZE_PX, display_settings.scope, 2.5);
+      const display_level = get_ideal_level(BAILIWICK_SIZE_PX, display_settings.scope, 2.0);
       const tiles_0 = FractoData.tiles_in_scope(highest_level, display_settings.focal_point, display_settings.scope)
       const tiles_1 = FractoData.tiles_in_scope(highest_level - 1, display_settings.focal_point, display_settings.scope)
       const tiles_2 = FractoData.tiles_in_scope(highest_level - 2, display_settings.focal_point, display_settings.scope)
@@ -258,28 +139,68 @@ export class FieldBailiwicks extends Component {
          tiles_0: tiles_0,
          tiles_1: tiles_1,
          tiles_2: tiles_2,
-         tiles_3: tiles_3
+         tiles_3: tiles_3,
+         display_settings: display_settings
       })
    }
 
+   set_detect = (in_detect) => {
+      const {tiles_0} = this.state
+      if (!in_detect) {
+         this.setState({in_detect: false})
+      } else {
+         const short_codes = tiles_0.map(tile => tile.short_code)
+         console.log("set_detect", short_codes)
+         FractoMruCache.get_tiles_async(short_codes, result => {
+            console.log("ready to detect")
+            this.setState({in_detect: true})
+         })
+      }
+   }
+
+   change_display_settings = (display_settings) => {
+      const {selected_bailiwick} = this.state
+      console.log("change_display_settings", display_settings)
+      if (!display_settings) {
+         const bailiwick_settings = JSON.parse(selected_bailiwick.display_settings)
+         this.setState({display_settings: bailiwick_settings})
+      } else {
+         this.setState({display_settings: display_settings})
+      }
+   }
+
    render_points_list = () => {
-      const {node_points, selected_bailiwick, hover_point} = this.state;
-      const points = node_points
-         .filter(point => point.bailiwick_name === selected_bailiwick.name)
-         .sort((a, b) => a.long_form > b.long_form ? 1 : -1)
-      return points.map(point => {
-         const rowStyle = !hover_point || hover_point.location !== point.location ? {} : {
-            backgroundColor: "#eeeeee",
-            fontWeight: "bold"
-         }
-         return [
-            <NodePointRow
-               style={rowStyle}
-               onMouseOver={e => this.setState({hover_point: point})}>
-               {`${point.long_form} [${point.short_form}]`}
-            </NodePointRow>
-         ]
-      })
+      const {
+         selected_bailiwick, in_detect,
+         detect_pattern, detect_iteration, detect_x, detect_y
+      } = this.state;
+      const points_list = <BailiwickPointsList
+         bailiwick={selected_bailiwick}
+         on_hover_point={point => this.setState({hover_point: point})}
+         on_display_settings_change={display_settings => this.change_display_settings(display_settings)}
+      />
+      const detect_status = !in_detect ? [] : [
+         <NodePointRow>{`pattern: ${detect_pattern}`}</NodePointRow>,
+         <NodePointRow>{`iteration: ${detect_iteration}`}</NodePointRow>,
+         <NodePointRow>{`x: ${detect_x}`}</NodePointRow>,
+         <NodePointRow>{`y: ${detect_y}`}</NodePointRow>,
+      ]
+      return [
+         in_detect ?
+            <DetectPrompt>
+               {"Hover over image to find nodes..."}
+               <DetectLink
+                  onClick={e => this.set_detect(false)}>
+                  {"end"}
+               </DetectLink>
+            </DetectPrompt> :
+            <DetectLink
+               onClick={e => this.set_detect(true)}>
+               {"detect more"}
+            </DetectLink>,
+         detect_status,
+         points_list,
+      ]
    }
 
    render_levels_tab = (highest_level) => {
@@ -324,73 +245,137 @@ export class FieldBailiwicks extends Component {
       </LevelTabsWrapper>
    }
 
-   save_node_points = (node_points, bailiwick_name, root, index, cb) => {
-      if (index >= node_points.length) {
-         cb("complete");
-         return;
+   find_point_data = (tile, x, y) => {
+      const tile_data = FractoMruCache.tile_cache[tile.short_code];
+      if (!tile_data) {
+         console.log("tile_data empty")
+         return {}
       }
-      const node_point = node_points[index];
-      this.save_node_point(node_point, bailiwick_name, root, result => {
-         this.save_node_points(node_points, bailiwick_name, root, index + 1, cb)
+      const bounds = FractoUtil.bounds_from_short_code(tile.short_code)
+      // console.log("bounds, x, y", bounds, x, y)
+      const tile_width = bounds.right - bounds.left
+      const x_img = Math.floor(256 * (x - bounds.left) / tile_width)
+      const y_img = Math.floor(256 * (bounds.top - y) / tile_width)
+      if (!tile_data[x_img] || !tile_data[x_img][y_img]) {
+         console.log("bad tile, x_img, y_img", x_img, y_img)
+         return {}
+      }
+      return {
+         pattern: tile_data[x_img][y_img][0],
+         iteration: tile_data[x_img][y_img][1]
+      }
+   }
+
+   find_tile = (x, y) => {
+      const {tiles_0} = this.state;
+      return tiles_0.find(tile => {
+         const bounds = FractoUtil.bounds_from_short_code(tile.short_code)
+         if (bounds.right < x) {
+            return false;
+         }
+         if (bounds.left > x) {
+            return false;
+         }
+         if (bounds.top < y) {
+            return false;
+         }
+         if (bounds.bottom > y) {
+            return false;
+         }
+         return true;
       })
    }
 
-   store_node_points = () => {
-      const {selected_bailiwick} = this.state
-      console.log("selected_bailiwick", selected_bailiwick)
-      StoreS3.get_file_async(`bailiwicks/${selected_bailiwick.registry_filename}`, "fracto", result => {
-         const bailiwick_data = JSON.parse(result);
-         console.log("bailiwick_data", bailiwick_data)
-         this.save_node_points(bailiwick_data.points, selected_bailiwick.name, selected_bailiwick.pattern, 0, result => {
-            console.log("save_node_points", result)
+   on_mouse_over = (e) => {
+      const {in_detect, wrapper_ref, selected_bailiwick, display_settings} = this.state
+      const wrapper = wrapper_ref.current
+      if (!wrapper || !in_detect || !selected_bailiwick) {
+         return;
+      }
+      const clientRect = wrapper.getBoundingClientRect()
+      const canvas_x = e.clientX - clientRect.x
+      const canvas_y = e.clientY - clientRect.y
+      // console.log("canvas_x, canvas_y", canvas_x, canvas_y)
+
+      const min_x = display_settings.focal_point.x - display_settings.scope / 2
+      const max_y = display_settings.focal_point.y + display_settings.scope / 2
+      const increment = display_settings.scope / BAILIWICK_SIZE_PX
+      let least_iteration = 1000001
+      let found_pattern = 0
+      let target_x = -1
+      let target_y = -1
+      for (let x_offset = -10; x_offset < 10; x_offset++) {
+         const img_x = canvas_x + x_offset;
+         const x = min_x + img_x * increment
+         for (let y_offset = -10; y_offset < 10; y_offset++) {
+            const img_y = canvas_y - y_offset;
+            const y = max_y - img_y * increment
+            const tile = this.find_tile(x, y)
+            if (!tile) {
+               console.log("no tile found")
+            } else {
+               const point_data = this.find_point_data(tile, x, y)
+               if (point_data.iteration < least_iteration && point_data.pattern !== 0) {
+                  least_iteration = point_data.iteration
+                  found_pattern = point_data.pattern
+                  target_x = x
+                  target_y = y
+               }
+            }
+         }
+      }
+      if (found_pattern !== 0) {
+         // console.log (`found one! least_iteration=${least_iteration}, found_pattern=${found_pattern}`)
+         this.setState({
+            detect_iteration: least_iteration,
+            detect_pattern: found_pattern,
+            detect_x: target_x,
+            detect_y: target_y
          })
+      }
+
+   }
+
+   detect_node = () => {
+      const {selected_bailiwick, detect_pattern, detect_y, detect_x, in_detect} = this.state
+      if (!in_detect) {
+         return;
+      }
+      const node_point = {
+         pattern: detect_pattern,
+         x: detect_x,
+         y: detect_y
+      }
+      BailiwickData.save_node_point(node_point, selected_bailiwick.name, selected_bailiwick.pattern, result => {
+         console.log("BailiwickData.save_node_point", result)
       })
    }
 
    render() {
       const {
-         selected_bailiwick, loading, all_bailiwicks, freeform_index, harvest_mode,
-         highest_level, display_level, node_points, hover_point
+         selected_bailiwick, loading, freeform_index, harvest_mode,
+         highest_level, hover_point, in_detect, wrapper_ref,
+         detect_x, detect_y, display_settings
       } = this.state
-      // console.log("all_bailiwicks in render", all_bailiwicks)
-      // console.log("loading in render", loading)
       if (loading) {
          return FractoCommon.loading_wait_notice()
       }
-      const bailiwicks_list = all_bailiwicks.map((item, i) => {
-         const pattern_block = render_pattern_block(item.pattern)
-         const selected = !selected_bailiwick ? false : item.magnitude === selected_bailiwick.magnitude
-         const row_style = !selected ? {} : {
-            border: `0.1rem solid ${CoolColors.deep_blue}`,
-            borderRadius: `0.25rem`,
-            backgroundColor: "#cccccc",
-            color: "white",
-         }
-         const display_settings = JSON.parse(item.display_settings)
-         const core_point = JSON.parse(item.core_point)
-         const highest_level = get_ideal_level(BAILIWICK_MAX_SIZE, display_settings.scope, 2.5);
-         const bailiwick_name = FractoUtil.bailiwick_name(item.pattern, core_point, highest_level)
-         return <RowWrapper
-            onClick={e => this.select_bailiwick(item, i)}
-            style={row_style}>
-            <BlockWrapper>{pattern_block}</BlockWrapper>
-            <NameWrapper>{bailiwick_name}</NameWrapper>
-         </RowWrapper>
-      })
+      const bailiwick_list = <BailiwickList
+         on_select={bailiwick => this.select_bailiwick(bailiwick, bailiwick.free_ordinal)}/>
       let details = ''
       let bailiwick = ''
       let bailiwick_name = ''
-      let display_settings = {}
       if (selected_bailiwick) {
-         display_settings = JSON.parse(selected_bailiwick.display_settings)
-         const hover_node = !hover_point ? [] : [JSON.parse(hover_point.location)]
+         const hover_node = !hover_point || in_detect ? [] : [JSON.parse(hover_point.location)]
+         const detect_node = !in_detect ? [] : [{x: detect_x, y: detect_y}]
+         const display_level = get_ideal_level(BAILIWICK_SIZE_PX, display_settings.scope, 2.0);
          bailiwick = <FractoLayeredCanvas
             width_px={BAILIWICK_SIZE_PX}
             scope={display_settings.scope}
             level={display_level}
             aspect_ratio={1.0}
             focal_point={display_settings.focal_point}
-            highlight_points={hover_node}
+            highlight_points={in_detect ? detect_node : hover_node}
          />
          const core_point_data = JSON.parse(selected_bailiwick.core_point)
          const cq_code = FractoUtil.CQ_code_from_point(core_point_data.x, core_point_data.y)
@@ -413,7 +398,6 @@ export class FieldBailiwicks extends Component {
             `magnitude: ${selected_bailiwick.magnitude}`,
             `CQ code: ${cq_code.slice(0, 25)}`,
             [`core point: `, core_point],
-            <CoolButton on_click={e => this.store_node_points()} content={"node points"}/>,
             this.render_levels_tab(highest_level)
          ]
          details = detail_info.map(detail => {
@@ -431,8 +415,13 @@ export class FieldBailiwicks extends Component {
       />
       return [
          <FieldWrapper>
-            <ListWrapper>{bailiwicks_list}</ListWrapper>
-            <BailiwickWrapper>{bailiwick}</BailiwickWrapper>
+            <ListWrapper>{bailiwick_list}</ListWrapper>
+            <BailiwickWrapper
+               ref={wrapper_ref}
+               onClick={e => this.detect_node()}
+               onMouseMove={e => this.on_mouse_over(e)}>
+               {bailiwick}
+            </BailiwickWrapper>
             <DetailsWrapper>{details}</DetailsWrapper>
          </FieldWrapper>,
          harvested
