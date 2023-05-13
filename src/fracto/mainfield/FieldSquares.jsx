@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import Complex from "../../common/math/Complex";
-import {PI} from "aws-sdk";
 // import styled from "styled-components";
 //
 // import {CoolStyles} from 'common/ui/CoolImports';

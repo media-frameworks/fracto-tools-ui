@@ -8,16 +8,18 @@ export const FIELD_TYPE_HARVEST = "harvest";
 export const FIELD_TYPE_TRANSIT = "transit";
 export const FIELD_TYPE_BAILIWICKS = "bailiwicks";
 export const FIELD_TYPE_BURROWS = "burrows";
-export const FIELD_TYPE_TEST = "test";
+export const FIELD_TYPE_POINTS = "points";
 export const FIELD_TYPE_SQUARES = "squares";
+export const FIELD_TYPE_TEST = "test";
 
 export const ALL_FIELD_TYPES = [
    FIELD_TYPE_HARVEST,
    FIELD_TYPE_TRANSIT,
    FIELD_TYPE_BAILIWICKS,
    FIELD_TYPE_BURROWS,
-   FIELD_TYPE_TEST,
+   FIELD_TYPE_POINTS,
    FIELD_TYPE_SQUARES,
+   FIELD_TYPE_TEST,
 ]
 
 const FieldTypeWrapper = styled(CoolStyles.Block)`

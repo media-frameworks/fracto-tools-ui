@@ -1,15 +1,11 @@
-import {Component} from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
 import {CoolColors, CoolStyles} from "common/ui/CoolImports";
 
-import {get_ideal_level} from "../../common/data/FractoData";
-import FractoUtil from "../../common/FractoUtil";
 import BailiwickData from "./BailiwickData";
 import {render_pattern_block} from "../../common/FractoStyles";
-
-const BAILIWICK_MAX_SIZE = 4096;
 
 const RowWrapper = styled(CoolStyles.Block)`
    ${CoolStyles.pointer}
@@ -46,25 +42,34 @@ export class BailiwickList extends Component {
 
    state = {
       all_bailiwicks: [],
-      selected_index: 0
+      selected_index: 0,
+      scroll_ref: React.createRef()
    };
 
    componentDidMount() {
       BailiwickData.fetch_bailiwicks(all_bailiwicks => {
          this.setState({all_bailiwicks: all_bailiwicks})
-         this.select_bailiwick(all_bailiwicks[0], 0)
+         const selected_index = parseInt( localStorage.getItem("selected_bailiwick"))
+         this.select_bailiwick(all_bailiwicks[selected_index], selected_index)
+         setTimeout(() => {
+            const scroll_element = this.state.scroll_ref.current
+            if (scroll_element) {
+               scroll_element.scrollIntoView({ behavior: 'smooth' });
+            }
+         }, 100)
       })
    }
 
    select_bailiwick = (item, i)=> {
       const {on_select} = this.props
+      localStorage.setItem('selected_bailiwick', String(i))
       item.free_ordinal = i
       on_select(item)
       this.setState({selected_index: i})
    }
 
    render(){
-      const {all_bailiwicks, selected_index} = this.state
+      const {all_bailiwicks, selected_index, scroll_ref} = this.state
       return all_bailiwicks.map((item, i) => {
          const pattern_block = render_pattern_block(item.pattern)
          const selected = selected_index === i
@@ -74,11 +79,9 @@ export class BailiwickList extends Component {
             backgroundColor: "#cccccc",
             color: "white",
          }
-         const display_settings = JSON.parse(item.display_settings)
-         const core_point = JSON.parse(item.core_point)
-         const highest_level = get_ideal_level(BAILIWICK_MAX_SIZE, display_settings.scope, 2.5);
-         const bailiwick_name = FractoUtil.bailiwick_name(item.pattern, core_point, highest_level)
+         const bailiwick_name = item.name // FractoUtil.bailiwick_name(item.pattern, core_point, highest_level)
          return <RowWrapper
+            ref={selected ? scroll_ref : null}
             onClick={e => this.select_bailiwick(item, i) }
             style={row_style}>
             <BlockWrapper>{pattern_block}</BlockWrapper>

@@ -1,14 +1,22 @@
-import {Component} from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 import Complex from "../../common/math/Complex";
 import BigComplex from "../../common/math/BigComplex";
 import FractoCalc from "../common/data/FractoCalc";
+import styled from "styled-components";
+import FractoUtil from "../common/FractoUtil";
 // import styled from "styled-components";
 //
 // import {CoolStyles} from 'common/ui/CoolImports';
 
 const EPSILON = Math.pow(10, -5);
+
+const FractoCanvas = styled.canvas`
+   margin: 0;
+`;
+
+const CANVAS_WIDTH_PX = 3500;
 
 export class FieldTest extends Component {
 
@@ -17,11 +25,22 @@ export class FieldTest extends Component {
    }
 
    state = {
-      results: ""
+      canvas_ref: React.createRef(),
+      results: "",
+      ctx: null
    };
 
    componentDidMount() {
-      let counter = 0;
+      const {canvas_ref} = this.state
+      const canvas = canvas_ref.current;
+      if (!canvas) {
+         console.log('no canvas');
+         return;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = `#f8f8f8`
+      ctx.fillRect(0, 0, CANVAS_WIDTH_PX, CANVAS_WIDTH_PX);
+      this.setState({ctx: ctx})
    }
 
    test_result = (P, Q) => {
@@ -167,14 +186,14 @@ export class FieldTest extends Component {
             const calc = FractoCalc.calc(P.re.toNumber(), P.im.toNumber())
             const test = this.test_result(P, all_Q[1])
             // if (calc.pattern || test) {
-               console.log(`found something (${k}): test = ${test}, calc ${calc.pattern} (${calc.iteration})`)
+            console.log(`found something (${k}): test = ${test}, calc ${calc.pattern} (${calc.iteration})`)
             // }
             return;
          }
       }
    }
 
-   run_test = () => {
+   run_test_later_maybe = () => {
       for (let run = 0; run < 1000; run++) {
          const Q1 = new BigComplex(-2.5 * Math.random() + 0.5, 2 * Math.random() - 1)
          const Q3 = new BigComplex(-2.5 * Math.random() + 0.5, 2 * Math.random() - 1)
@@ -189,21 +208,99 @@ export class FieldTest extends Component {
          let all_Q_a = [0, Q1, Q2_a, Q3]
          let all_Q_b = [0, Q1, Q2_b, Q3]
 
-         const result_a = this.run_Q2(all_Q_a)
-         const result_b = this.run_Q2(all_Q_b)
+         this.run_Q2(all_Q_a)
+         this.run_Q2(all_Q_b)
 
          console.log("end test")
       }
    }
 
+   run_test_in_the_past2 = () => {
+      for (let factor = 1.0; factor > 0; factor -= 0.01) {
+         let hits = 0
+         for (let run = 0; run < 1000; run++) {
+            const re_part = -5.0 * Math.random() + 2.5
+            const im_part = 3 * Math.random() - 1.5
+            const Q2 = new Complex(re_part * factor, im_part * factor)
+            const four_Q2_plus_one = Q2.scale(4.0).offset(1.0, 0)
+            const positive_radical = four_Q2_plus_one.sqrt().scale(0.5)
+            const negative_radical = positive_radical.scale(-1)
+            const result_1 = positive_radical.offset(-0.5, 0)
+            const result_2 = negative_radical.offset(-0.5, 0)
+            const calc_1 = FractoCalc.calc(result_1.re, result_1.im)
+            const calc_2 = FractoCalc.calc(result_2.re, result_2.im)
+            if (calc_1.pattern > 2) {
+               this.set_point(result_1.re, result_1.im, calc_1.pattern, calc_1.iteration)
+               hits++
+            }
+            if (calc_2.pattern > 2) {
+               this.set_point(result_2.re, result_2.im, calc_2.pattern, calc_2.iteration)
+               hits++
+            }
+         }
+         console.log(`hits: ${hits}`)
+      }
+      setTimeout(() => {
+         this.run_test()
+      }, 100)
+   }
+
+   set_point = (x, y, pattern, iteration) => {
+      const {ctx} = this.state
+      const x_increment = 2.5 / CANVAS_WIDTH_PX
+      const img_x = (x + 2.0) / x_increment
+      const img_y = CANVAS_WIDTH_PX - (Math.abs(y) + 1.25) / x_increment
+      ctx.fillStyle = FractoUtil.fracto_pattern_color(pattern, iteration)
+      ctx.fillRect(img_x, img_y, 1, 1);
+   }
+
+   run_test = () => {
+      let hits = 0
+      for (let run = 0; run < 1000; run++) {
+         const re_part = -5.0 * Math.random() + 2.5
+         const im_part = 3 * Math.random() - 1.5
+         const Q2 = new Complex(re_part, im_part)
+         const Q2_squared = Q2.mul(Q2)
+         const Q2_cubed = Q2_squared.mul(Q2)
+         const sqrt_Q2 = Q2.sqrt()
+         const one_over_two_Q2 = Q2.scale(2.0).reciprocal()
+         const Q2_cubed_plus_4 = Q2_cubed.offset(4.0, 0)
+         const sqrt_Q2_cubed_plus_4 = Q2_cubed_plus_4.sqrt()
+         const main_product = sqrt_Q2.mul(sqrt_Q2_cubed_plus_4)
+         const negative_main_product = main_product.scale(-1.0)
+         const negative_Q2_squared = Q2_squared.scale(-1.0)
+
+         const result_1 = main_product.add(negative_Q2_squared).mul(one_over_two_Q2)
+         const calc_1 = FractoCalc.calc(result_1.re, result_1.im)
+         if (calc_1.pattern > 2) {
+            this.set_point(result_1.re, result_1.im, calc_1.pattern, calc_1.iteration)
+            hits++
+         }
+         const result_2 = negative_main_product.add(negative_Q2_squared).mul(one_over_two_Q2)
+         const calc_2 = FractoCalc.calc(result_2.re, result_2.im)
+         if (calc_2.pattern > 2) {
+            this.set_point(result_2.re, result_2.im, calc_2.pattern, calc_2.iteration)
+            hits++
+         }
+      }
+      console.log(`hits: ${hits}`)
+      setTimeout(() => {
+         this.run_test()
+      }, 100)
+   }
+
    render() {
-      const {results} = this.state
+      const {canvas_ref} = this.state
       return [
          <div onClick={e => this.run_test()}>{"Click to run test"}</div>,
-         results
+         <FractoCanvas
+            ref={canvas_ref}
+            width={CANVAS_WIDTH_PX}
+            height={CANVAS_WIDTH_PX}
+         />
       ]
-
    }
+
 }
 
 export default FieldTest;

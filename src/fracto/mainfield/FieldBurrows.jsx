@@ -54,9 +54,9 @@ const LevelTabsWrapper = styled(CoolStyles.Block)`
    margin: 0.5rem;
 `;
 
-const HarvestWrapper = styled(CoolStyles.Block)`
-   margin: 0.5rem;
-`;
+// const HarvestWrapper = styled(CoolStyles.Block)`
+//    margin: 0.5rem;
+// `;
 
 const NameWrapper = styled(CoolStyles.InlineBlock)`
    ${CoolStyles.bold}
@@ -70,9 +70,9 @@ const NameWrapper = styled(CoolStyles.InlineBlock)`
    color: #666666;
 `;
 
-const HarvestButtonWrapper = styled(CoolStyles.InlineBlock)`
-   margin-left: 1rem;
-`;
+// const HarvestButtonWrapper = styled(CoolStyles.InlineBlock)`
+//    margin-left: 1rem;
+// `;
 
 const BurrowNameSpan = styled(CoolStyles.InlineBlock)`
    ${CoolStyles.bold}

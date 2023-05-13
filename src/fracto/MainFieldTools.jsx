@@ -4,22 +4,27 @@ import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
 import ToolHeader from './mainfield/ToolHeader';
+import BailiwickHeader from './mainfield/bailiwicks/BailiwickHeader'
 
 import FieldHarvest from './mainfield/FieldHarvest';
 import FieldTransit from './mainfield/FieldTransit';
 import FieldBailiwicks from './mainfield/FieldBailiwicks';
 import FieldBurrows from "./mainfield/FieldBurrows";
-import FieldTest from "./mainfield/FieldTest";
+import FieldPoints from "./mainfield/FieldPoints";
 import FieldSquares from "./mainfield/FieldSquares";
+import FieldTest from "./mainfield/FieldTest";
 
 import {
    FIELD_TYPE_HARVEST,
    FIELD_TYPE_TRANSIT,
    FIELD_TYPE_BAILIWICKS,
    FIELD_TYPE_BURROWS,
-   FIELD_TYPE_TEST,
+   FIELD_TYPE_POINTS,
    FIELD_TYPE_SQUARES,
+   FIELD_TYPE_TEST,
 } from "./SidebarTools";
+
+const PADDING_PX = 10
 
 const ToolField = styled(CoolStyles.Block)`
    ${CoolStyles.fixed}
@@ -28,6 +33,7 @@ const ToolField = styled(CoolStyles.Block)`
    bottom: 0;
    overflow: auto;
    background-color: white;
+   padding: ${PADDING_PX}px;
 }`
 
 export class MainFieldTools extends Component {
@@ -54,26 +60,45 @@ export class MainFieldTools extends Component {
             return <FieldBailiwicks width_px={width_px}/>
          case FIELD_TYPE_BURROWS:
             return <FieldBurrows width_px={width_px}/>
-         case FIELD_TYPE_TEST:
-            return <FieldTest width_px={width_px}/>
+         case FIELD_TYPE_POINTS:
+            return <FieldPoints width_px={width_px}/>
          case FIELD_TYPE_SQUARES:
             return <FieldSquares width_px={width_px}/>
+         case FIELD_TYPE_TEST:
+            return <FieldTest width_px={width_px}/>
          default:
             console.log("unknown tool", tool_specifier)
             break;
       }
       return []
    }
+   on_field_specify = (field) => {
+
+   }
+
+   render_header = () => {
+      const {width_px, tool_specifier} = this.props;
+      switch (tool_specifier) {
+         case FIELD_TYPE_BAILIWICKS:
+            return <BailiwickHeader
+               key={'BailiwickHeader'}
+               width_px={width_px}
+               on_field_specify={field => this.on_field_specify(field)}
+            />
+         default:
+            return <ToolHeader
+               key={'ToolHeader'}
+               tool_specifier={tool_specifier}
+               width_px={width_px}/>
+      }
+   }
 
    render() {
-      const {tool_specifier, width_px} = this.props;
+      const {width_px} = this.props;
       const field_rendering = this.render_field()
-      const field_style = {width: `${width_px}px`}
+      const field_style = {width: `${width_px - 2 * PADDING_PX}px`}
       return [
-         <ToolHeader
-            key={'ToolHeader'}
-            tool_specifier={tool_specifier}
-            width_px={width_px}/>,
+         this.render_header(),
          <ToolField
             key={'ToolField'}
             style={field_style}>
