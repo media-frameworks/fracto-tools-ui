@@ -1,7 +1,8 @@
+import network from "common/config/network.json";
 import FractoUtil from "../../common/FractoUtil";
 import {get_ideal_level} from "../../common/data/FractoData";
 
-const FRACTO_DB_URL = 'http://127.0.0.1:3001';
+const FRACTO_DB_URL = network.db_server_url;
 
 const BAILIWICK_MAX_SIZE = 4096;
 const BAILIWICK_SIZE_PX = 650;
@@ -76,7 +77,7 @@ export class BailiwickData {
    static save_node_point = (node_point, bailiwick_id, root, cb) => {
       const url = node_point.id ? `${FRACTO_DB_URL}/update_node_point` : `${FRACTO_DB_URL}/new_node_point`;
       const location = {x: node_point.x, y: node_point.y}
-      console.log ("save_node_point location, url",location, url)
+      console.log("save_node_point location, url", location, url)
       const cq_code = FractoUtil.CQ_code_from_point(location.x, location.y)
       const name = `N${node_point.pattern}-CP${cq_code.substr(0, 20)}`
       let data = {
@@ -97,7 +98,7 @@ export class BailiwickData {
          return `${key}=${data[key]}`
       })
       const data_url = `${url}?${encoded_params.join('&')}`
-      console.log ("save_node_point data_url",data_url)
+      console.log("save_node_point data_url", data_url)
       fetch(data_url, {
          body: JSON.stringify(data), // data you send.
          headers: {'Content-Type': 'application/json'},

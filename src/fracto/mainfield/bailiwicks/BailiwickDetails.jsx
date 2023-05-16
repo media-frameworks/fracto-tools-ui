@@ -7,7 +7,7 @@ import FractoUtil from "fracto/common/FractoUtil";
 import {render_coordinates} from "fracto/common/FractoStyles";
 
 const BailiwickNameBlock = styled(CoolStyles.InlineBlock)`
-   margin-bottom: 0.5rem;
+   margin-bottom: 0.25rem;
 `;
 
 const BailiwickNameSpan = styled(CoolStyles.InlineBlock)`
@@ -26,7 +26,7 @@ const BigColorBox = styled(CoolStyles.InlineBlock)`
    border: 0.1rem solid #555555;
    color: white;
    margin-right: 0.5rem;
-   font-size: 2.5rem;
+   font-size: 2.25rem;
 `;
 
 const StatsWrapper = styled(CoolStyles.Block)`

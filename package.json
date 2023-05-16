@@ -11,6 +11,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "aws-sdk": "^2.1321.0",
+    "flickr-sdk": "^6.2.1",
     "mathjs": "^11.8.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",

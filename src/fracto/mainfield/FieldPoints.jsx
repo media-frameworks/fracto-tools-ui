@@ -1,15 +1,16 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+// import styled from "styled-components";
+
+import network from "common/config/network.json";
+// import {CoolStyles} from 'common/ui/CoolImports';
 
 import Complex from "../../common/math/Complex";
 import FractoCalc from "../common/data/FractoCalc";
 import styled from "styled-components";
 import FractoUtil from "../common/FractoUtil";
-// import styled from "styled-components";
-//
-// import {CoolStyles} from 'common/ui/CoolImports';
 
-const FRACTO_DB_URL = 'http://127.0.0.1:3001';
+const FRACTO_DB_URL = network.db_server_url;
 
 const FractoCanvas = styled.canvas`
    margin: 0;

@@ -2,6 +2,7 @@ import {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
+import network from "common/config/network.json";
 import {CoolTabs, CoolColors, CoolStyles} from 'common/ui/CoolImports';
 
 import FractoUtil from "../common/FractoUtil";
@@ -17,7 +18,7 @@ const BURROW_SIZE_PX = 650;
 const STEPS_LIST_WIDTH_PX = 240;
 const BURROW_MAX_SIZE = 4096;
 
-const FRACTO_DB_URL = 'http://127.0.0.1:3001';
+const FRACTO_DB_URL = network.db_server_url;
 
 const FieldWrapper = styled(CoolStyles.Block)`
    margin: 0;

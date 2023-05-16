@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
 import ToolHeader from './mainfield/ToolHeader';
-import BailiwickHeader from './mainfield/bailiwicks/BailiwickHeader'
+import BailiwickHeader, {BAILIWICKS_FIELD_REFINE} from './mainfield/bailiwicks/BailiwickHeader'
 
 import FieldHarvest from './mainfield/FieldHarvest';
 import FieldTransit from './mainfield/FieldTransit';
@@ -43,13 +43,16 @@ export class MainFieldTools extends Component {
       width_px: PropTypes.number.isRequired,
    }
 
-   state = {};
+   state = {
+      field_specifier: BAILIWICKS_FIELD_REFINE
+   };
 
    componentDidMount() {
       console.log("this.props", this.props)
    }
 
    render_field = () => {
+      const {field_specifier} = this.state
       const {width_px, tool_specifier} = this.props;
       switch (tool_specifier) {
          case FIELD_TYPE_HARVEST:
@@ -57,7 +60,7 @@ export class MainFieldTools extends Component {
          case FIELD_TYPE_TRANSIT:
             return <FieldTransit width_px={width_px}/>
          case FIELD_TYPE_BAILIWICKS:
-            return <FieldBailiwicks width_px={width_px}/>
+            return <FieldBailiwicks width_px={width_px} field_specifier={field_specifier} />
          case FIELD_TYPE_BURROWS:
             return <FieldBurrows width_px={width_px}/>
          case FIELD_TYPE_POINTS:
@@ -72,17 +75,20 @@ export class MainFieldTools extends Component {
       }
       return []
    }
-   on_field_specify = (field) => {
 
+   on_field_specify = (field) => {
+      this.setState({field_specifier: field})
    }
 
    render_header = () => {
+      const {field_specifier} = this.state
       const {width_px, tool_specifier} = this.props;
       switch (tool_specifier) {
          case FIELD_TYPE_BAILIWICKS:
             return <BailiwickHeader
                key={'BailiwickHeader'}
                width_px={width_px}
+               field_specifier={field_specifier}
                on_field_specify={field => this.on_field_specify(field)}
             />
          default:
