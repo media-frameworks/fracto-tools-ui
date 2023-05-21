@@ -4,18 +4,19 @@ import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
 import ToolHeader from './mainfield/ToolHeader';
-import BailiwickHeader, {BAILIWICKS_FIELD_REFINE} from './mainfield/bailiwicks/BailiwickHeader'
+import BailiwickHeader, {BAILIWICKS_FIELD_REFINE} from './mainfield/bailiwicks/BailiwickHeader';
+import ImageHeader, {IMAGES_FIELD_TILES} from './mainfield/images/ImageHeader';
 
-import FieldHarvest from './mainfield/FieldHarvest';
 import FieldTransit from './mainfield/FieldTransit';
 import FieldBailiwicks from './mainfield/FieldBailiwicks';
 import FieldBurrows from "./mainfield/FieldBurrows";
 import FieldPoints from "./mainfield/FieldPoints";
 import FieldSquares from "./mainfield/FieldSquares";
 import FieldTest from "./mainfield/FieldTest";
+import FieldImages from './mainfield/FieldImages';
 
 import {
-   FIELD_TYPE_HARVEST,
+   FIELD_TYPE_IMAGES,
    FIELD_TYPE_TRANSIT,
    FIELD_TYPE_BAILIWICKS,
    FIELD_TYPE_BURROWS,
@@ -44,19 +45,27 @@ export class MainFieldTools extends Component {
    }
 
    state = {
-      field_specifier: BAILIWICKS_FIELD_REFINE
+      field_specifiers: {
+         FIELD_TYPE_IMAGES: IMAGES_FIELD_TILES,
+         FIELD_TYPE_BAILIWICKS: BAILIWICKS_FIELD_REFINE,
+      }
    };
 
    componentDidMount() {
       console.log("this.props", this.props)
+      const field_specifiers_str = localStorage.getItem(`MainFieldTools.field_specifiers`)
+      if (field_specifiers_str) {
+         this.setState({field_specifiers: JSON.parse(field_specifiers_str)})
+      }
    }
 
    render_field = () => {
-      const {field_specifier} = this.state
+      const {field_specifiers} = this.state
       const {width_px, tool_specifier} = this.props;
+      const field_specifier = field_specifiers[tool_specifier]
       switch (tool_specifier) {
-         case FIELD_TYPE_HARVEST:
-            return <FieldHarvest width_px={width_px}/>
+         case FIELD_TYPE_IMAGES:
+            return <FieldImages width_px={width_px} field_specifier={field_specifier} />
          case FIELD_TYPE_TRANSIT:
             return <FieldTransit width_px={width_px}/>
          case FIELD_TYPE_BAILIWICKS:
@@ -77,12 +86,17 @@ export class MainFieldTools extends Component {
    }
 
    on_field_specify = (field) => {
-      this.setState({field_specifier: field})
+      const {field_specifiers} = this.state
+      const {tool_specifier} = this.props;
+      field_specifiers[tool_specifier] = field
+      localStorage.setItem(`MainFieldTools.field_specifiers`, JSON.stringify(field_specifiers))
+      this.setState({field_specifiers: field_specifiers})
    }
 
    render_header = () => {
-      const {field_specifier} = this.state
+      const {field_specifiers} = this.state
       const {width_px, tool_specifier} = this.props;
+      const field_specifier = field_specifiers[tool_specifier]
       switch (tool_specifier) {
          case FIELD_TYPE_BAILIWICKS:
             return <BailiwickHeader
@@ -91,6 +105,14 @@ export class MainFieldTools extends Component {
                field_specifier={field_specifier}
                on_field_specify={field => this.on_field_specify(field)}
             />
+         case FIELD_TYPE_IMAGES:
+            return <ImageHeader
+               key={'ImageHeader'}
+               width_px={width_px}
+               field_specifier={field_specifier}
+               on_field_specify={field => this.on_field_specify(field)}
+            />
+
          default:
             return <ToolHeader
                key={'ToolHeader'}
