@@ -18,7 +18,6 @@ export class ImageData {
       fetch(url, {
          method: 'POST',
          headers: {'Content-Type': 'application/json'},
-         // body: JSON.stringify({"name": filename}),
          body: JSON.stringify({file: img_data, name: filename}),
       })
          .then(response => response.text())
@@ -28,17 +27,6 @@ export class ImageData {
             cb(response)
          })
    }
-
-   // static fetch_tile_images = (cb) => {
-   //    const url = `${FRACTO_DB_URL}/tile_images`
-   //    fetch(url)
-   //       .then(response => response.text())
-   //       .then((str) => {
-   //          const tile_images = JSON.parse(str)
-   //          console.log("tile_images", tile_images)
-   //          cb(tile_images)
-   //       })
-   // }
 
    static flickr_image_sizes = (photo_id, cb) => {
       const url = `${network.image_server_url}/image_sizes?photo_id=${photo_id}`
@@ -50,6 +38,7 @@ export class ImageData {
             cb(image_sizes)
          })
    }
+
 }
 
 export default ImageData;

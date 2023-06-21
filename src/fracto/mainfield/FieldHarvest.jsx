@@ -6,8 +6,8 @@ import {CoolStyles, CoolButton} from 'common/ui/CoolImports';
 
 import FractoData, {get_level_scope, BIN_VERB_INDEXED, MAX_LEVEL} from 'fracto/common/data/FractoData';
 import FractoDataLoader from 'fracto/common/data/FractoDataLoader';
-import FractoLayeredCanvas from 'fracto/common/data/FractoLayeredCanvas';
-import FractoDirectCanvas from 'fracto/common/data/FractoDirectCanvas';
+import FractoLayeredCanvas from 'fracto/common/render/FractoLayeredCanvas';
+import FractoDirectCanvas from 'fracto/common/render/FractoDirectCanvas';
 import FractoCommon from 'fracto/common/FractoCommon';
 
 import FractoTileAutomate, {

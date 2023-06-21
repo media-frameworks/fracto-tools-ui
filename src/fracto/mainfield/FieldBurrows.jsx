@@ -9,7 +9,7 @@ import FractoUtil from "../common/FractoUtil";
 import FractoCommon from "../common/FractoCommon";
 import {render_coordinates} from '../common/FractoStyles';
 
-import FractoLayeredCanvas from "../common/data/FractoLayeredCanvas";
+import FractoLayeredCanvas from "../common/render/FractoLayeredCanvas";
 import FractoData, {BIN_VERB_COMPLETED} from "../common/data/FractoData";
 import FractoDataLoader from "../common/data/FractoDataLoader";
 import {BIN_VERB_INDEXED, get_ideal_level} from "../common/data/FractoData";

@@ -2,10 +2,9 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import styled from "styled-components";
 
-import {CoolStyles, CoolButton} from 'common/ui/CoolImports';
 import network from "common/config/network.json";
+import {CoolStyles, CoolButton} from 'common/ui/CoolImports';
 
-import FractoUtil from "../../common/FractoUtil";
 import FractoCommon from "../../common/FractoCommon";
 
 import {CONTEXT_SIZE_PX, TILE_SIZE_PX} from "../../common/tile/FractoTileAutomate";
@@ -13,9 +12,9 @@ import FractoTileAutomate from "../../common/tile/FractoTileAutomate";
 import FractoTileDetails from "../../common/tile/FractoTileDetails";
 import FractoDataLoader from "../../common/data/FractoDataLoader";
 import FractoData, {BIN_VERB_INDEXED} from "../../common/data/FractoData";
+import FractoLayeredCanvas from "../../common/render/FractoLayeredCanvas";
 
 import ImageData from "./ImageData";
-import FractoLayeredCanvas from "../../common/data/FractoLayeredCanvas";
 
 const FRACTO_DB_URL = network.db_server_url;
 
@@ -23,25 +22,6 @@ const LevelsWtapper = styled(CoolStyles.InlineBlock)`
    margin: 0.5rem;
    height: 100%;
    background-color: loghtcoral;
-`;
-
-const LevelBlockWrapper = styled(CoolStyles.Block)`
-   ${CoolStyles.align_center}   
-   ${CoolStyles.pointer}   
-   background-color: #cccccc;
-   width: 3rem;
-`;
-
-const ColorBox = styled(CoolStyles.InlineBlock)`
-   ${CoolStyles.narrow_border_radius}
-   ${CoolStyles.narrow_text_shadow}
-   ${CoolStyles.monospace}
-   ${CoolStyles.bold}
-   padding: 0.125rem 0.25rem 0;
-   border: 0.1rem solid #555555;
-   color: white;
-   margin: 0.125rem 0;
-   font-size: 0.85rem;
 `;
 
 const AutomateWrapper = styled(CoolStyles.InlineBlock)`
@@ -55,6 +35,10 @@ const RightSideWrapper = styled(CoolStyles.InlineBlock)`
 const RightSideBlock = styled(CoolStyles.Block)`
    padding: 0.5rem 0;
    border-top: 0.25rem solid #dddddd;
+`;
+
+const UrlLink = styled(CoolStyles.LinkSpan)`
+   ${CoolStyles.bold}
 `;
 
 export class ImageTiles extends Component {
@@ -74,7 +58,10 @@ export class ImageTiles extends Component {
       access_keys: null,
       selected_tile: null,
       upload_ready: false,
-      upload_canvas_ref: null
+      upload_canvas_ref: null,
+      tile_images: [],
+      selected_tile_image: null,
+      in_tile_action: false
    };
 
    componentDidMount() {
@@ -89,6 +76,9 @@ export class ImageTiles extends Component {
          const tile_index = tile_index_str ? parseInt(tile_index_str) : 0
 
          this.initialize_access()
+         FractoData.fetch_tile_images(tile_images => {
+            this.setState({tile_images: tile_images})
+         })
          this.setState({
             indexed_loading: false,
             selected_level: selected_level,
@@ -112,12 +102,15 @@ export class ImageTiles extends Component {
    }
 
    set_tile_index = (tile_index) => {
-      const {all_tiles, selected_level} = this.state;
+      const {all_tiles, selected_level, tile_images} = this.state;
+      const selected_tile = all_tiles[tile_index]
+      const selected_tile_image = tile_images.find(tile_image => tile_image.short_code === selected_tile.short_code)
       this.setState({
-         selected_tile: all_tiles[tile_index],
+         selected_tile: selected_tile,
          tile_index: tile_index,
          upload_ready: false,
-         upload_canvas_ref: null
+         upload_canvas_ref: null,
+         selected_tile_image: selected_tile_image
       })
       const index_key = `ImageTiles-${selected_level}-tile_index`
       localStorage.setItem(index_key, `${tile_index}`)
@@ -138,9 +131,9 @@ export class ImageTiles extends Component {
 
    tile_action = (tile, cb) => {
       console.log("tile_action", tile)
-      this.setState({selected_tile: tile})
       this.setState({
          selected_tile: tile,
+         in_tile_action: true,
          upload_ready: false,
          upload_canvas_ref: null
       })
@@ -199,7 +192,7 @@ export class ImageTiles extends Component {
    }
 
    upload_image = () => {
-      const {upload_canvas_ref, selected_tile} = this.state
+      const {upload_canvas_ref, selected_tile, tile_index} = this.state
       if (!upload_canvas_ref) {
          console.log("upload_image: upload_canvas_ref is null")
          return
@@ -218,6 +211,7 @@ export class ImageTiles extends Component {
       ImageData.flickr_upload(img_data, selected_tile.short_code, response => {
          console.log("woo-hoo!", response)
          this.save_image(response, returns => {
+            this.set_tile_index(tile_index + 1)
             console.log(returns)
          })
       })
@@ -235,6 +229,34 @@ export class ImageTiles extends Component {
       />
    }
 
+   render_selected_tile_info = () => {
+      const {selected_tile_image} = this.state
+      if (!selected_tile_image) {
+         return 'no selection'
+      }
+      return <a
+         href={selected_tile_image.flickr_url}
+         target="_blank"
+         rel="noreferrer">
+         <UrlLink>
+            {selected_tile_image.flickr_url}
+         </UrlLink>
+      </a>
+   }
+
+   tile_image_plan_complete = (canvas_ref) => {
+      const {in_tile_action} = this.state
+      this.setState({
+         upload_ready: true,
+         upload_canvas_ref: canvas_ref
+      })
+      if (in_tile_action) {
+         setTimeout(() => {
+            this.upload_image()
+         }, 1000)
+      }
+   }
+
    render() {
       const {
          indexed_loading,
@@ -244,38 +266,14 @@ export class ImageTiles extends Component {
          in_verify,
          verify_url,
          in_verify_response,
-         selected_tile
+         selected_tile,
       } = this.state
       const {width_px} = this.props
       if (indexed_loading) {
          return FractoCommon.loading_wait_notice()
       }
-      const all_levels = []
-      for (let i = 2; i < 35; i++) {
-         all_levels.push(i)
-      }
-      const button_style = {
-         backgroundColor: FractoUtil.fracto_pattern_color(0, 25)
-      }
-      const selected_style = {
-         backgroundColor: "white",
-         color: 'black',
-         fontWeight: "bold",
-         fontSize: "1.75rem"
-      }
-      const selected_block_style = {
-         backgroundColor: "white"
-      }
-      const level_buttons = all_levels.map(level => {
-         return <LevelBlockWrapper
-            style={level === selected_level ? selected_block_style : {}}
-            onClick={e => this.set_level(level)}>
-            <ColorBox
-               style={level === selected_level ? selected_style : button_style}>
-               {level}
-            </ColorBox>
-         </LevelBlockWrapper>
-      })
+      const level_buttons = FractoCommon.level_button_stack(selected_level,24, this.set_level)
+
       const verify_link = !in_verify || in_verify_response ? '' : <RightSideBlock><a
          href={verify_url}
          target="_blank"
@@ -306,10 +304,7 @@ export class ImageTiles extends Component {
             x: (selected_tile.bounds.right + selected_tile.bounds.left) / 2,
             y: (selected_tile.bounds.top + selected_tile.bounds.bottom) / 2
          }}
-         on_plan_complete={canvas_ref => this.setState({
-            upload_ready: true,
-            upload_canvas_ref: canvas_ref
-         })}
+         on_plan_complete={canvas_ref => this.tile_image_plan_complete(canvas_ref)}
       />
       return [
          <LevelsWtapper>{level_buttons}</LevelsWtapper>,
@@ -330,7 +325,7 @@ export class ImageTiles extends Component {
             />
             {verify_link}
             {response_link}
-            <RightSideBlock>history/stats</RightSideBlock>
+            <RightSideBlock>{this.render_selected_tile_info()}</RightSideBlock>
             <RightSideBlock>{this.render_controls()}</RightSideBlock>
          </RightSideWrapper>,
          tile_image

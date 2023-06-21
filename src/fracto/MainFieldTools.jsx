@@ -12,16 +12,20 @@ import FieldBailiwicks from './mainfield/FieldBailiwicks';
 import FieldBurrows from "./mainfield/FieldBurrows";
 import FieldPoints from "./mainfield/FieldPoints";
 import FieldSquares from "./mainfield/FieldSquares";
+import FieldOrbitals from "./mainfield/FieldOrbitals";
 import FieldTest from "./mainfield/FieldTest";
 import FieldImages from './mainfield/FieldImages';
+import FieldExplorer from './mainfield/FieldExplorer';
 
 import {
+   FIELD_TYPE_EXPLORER,
    FIELD_TYPE_IMAGES,
    FIELD_TYPE_TRANSIT,
    FIELD_TYPE_BAILIWICKS,
    FIELD_TYPE_BURROWS,
    FIELD_TYPE_POINTS,
    FIELD_TYPE_SQUARES,
+   FIELD_TYPE_ORBITALS,
    FIELD_TYPE_TEST,
 } from "./SidebarTools";
 
@@ -64,6 +68,8 @@ export class MainFieldTools extends Component {
       const {width_px, tool_specifier} = this.props;
       const field_specifier = field_specifiers[tool_specifier]
       switch (tool_specifier) {
+         case FIELD_TYPE_EXPLORER:
+            return <FieldExplorer width_px={width_px} field_specifier={field_specifier} />
          case FIELD_TYPE_IMAGES:
             return <FieldImages width_px={width_px} field_specifier={field_specifier} />
          case FIELD_TYPE_TRANSIT:
@@ -76,6 +82,8 @@ export class MainFieldTools extends Component {
             return <FieldPoints width_px={width_px}/>
          case FIELD_TYPE_SQUARES:
             return <FieldSquares width_px={width_px}/>
+         case FIELD_TYPE_ORBITALS:
+            return <FieldOrbitals width_px={width_px}/>
          case FIELD_TYPE_TEST:
             return <FieldTest width_px={width_px}/>
          default:

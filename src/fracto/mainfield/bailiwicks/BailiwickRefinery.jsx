@@ -7,7 +7,7 @@ import Complex from "common/math/Complex";
 
 import FractoUtil from "fracto/common/FractoUtil";
 import FractoMruCache from "fracto/common/data/FractoMruCache";
-import FractoLayeredCanvas from "fracto/common/data/FractoLayeredCanvas";
+import FractoLayeredCanvas from "fracto/common/render/FractoLayeredCanvas";
 import FractoData, {get_ideal_level} from "fracto/common/data/FractoData";
 
 import BailiwickList from "./BailiwickList";
