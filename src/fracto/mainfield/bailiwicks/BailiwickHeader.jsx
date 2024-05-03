@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
 import FractoUtil from "fracto/common/FractoUtil";
-import BailiwickData from "./BailiwickData";
+import BailiwickData from "fracto/common/data/BailiwickData";
 
 export const BAILIWICKS_FIELD_REFINE = 'refine'
 export const BAILIWICKS_FIELD_DISCOVER = 'discover'

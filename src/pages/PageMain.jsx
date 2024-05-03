@@ -55,7 +55,7 @@ export class PageMain extends Component {
    render_content_right = (width_px) => {
       const {tool_specifier} = this.state
       if (!tool_specifier) {
-         return "no tool"
+         return ["no tool"]
       }
       return [
          <MainFieldTools

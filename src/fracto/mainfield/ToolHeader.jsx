@@ -39,11 +39,9 @@ export class ToolHeader extends Component {
 
    render() {
       const {tool_specifier} = this.props;
-      return [
-         <TitleBar>
-            <ToolTitle>{tool_specifier}</ToolTitle>
-         </TitleBar>
-      ];
+      return <TitleBar>
+         <ToolTitle>{tool_specifier}</ToolTitle>
+      </TitleBar>
    }
 }
 

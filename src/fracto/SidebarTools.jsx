@@ -4,25 +4,26 @@ import styled from "styled-components";
 
 import {CoolStyles} from 'common/ui/CoolImports';
 
-export const FIELD_TYPE_EXPLORER = "explorer";
 export const FIELD_TYPE_IMAGES = "images";
 export const FIELD_TYPE_TRANSIT = "transit";
 export const FIELD_TYPE_BAILIWICKS = "bailiwicks";
 export const FIELD_TYPE_BURROWS = "burrows";
-export const FIELD_TYPE_POINTS = "points";
+export const FIELD_TYPE_PACKAGER = "packager";
 export const FIELD_TYPE_SQUARES = "squares";
+export const FIELD_TYPE_EDGING = "edging";
 export const FIELD_TYPE_ORBITALS = "orbitals";
 export const FIELD_TYPE_TEST = "test";
+export const FIELD_TYPE_INVENTORY = "inventory";
 
 export const ALL_FIELD_TYPES = [
-   FIELD_TYPE_EXPLORER,
    FIELD_TYPE_IMAGES,
    FIELD_TYPE_TRANSIT,
    FIELD_TYPE_BAILIWICKS,
    FIELD_TYPE_BURROWS,
-   FIELD_TYPE_POINTS,
-   FIELD_TYPE_SQUARES,
+   FIELD_TYPE_PACKAGER,
+   FIELD_TYPE_EDGING,
    FIELD_TYPE_ORBITALS,
+   FIELD_TYPE_INVENTORY,
    FIELD_TYPE_TEST,
 ]
 
@@ -65,7 +66,7 @@ export class SidebarTools extends Component {
 
    static propTypes = {
       width_px: PropTypes.number.isRequired,
-      tool_specifier: PropTypes.string.isRequired,
+      tool_specifier: PropTypes.string,
       on_tool_specify: PropTypes.func.isRequired,
    }
 
@@ -79,11 +80,12 @@ export class SidebarTools extends Component {
 
    render() {
       const {tool_specifier} = this.props;
-      const sidebar_list = ALL_FIELD_TYPES.map(field_type => {
+      const sidebar_list = ALL_FIELD_TYPES.map((field_type, i) => {
          const is_selected =tool_specifier === field_type
          const marker = is_selected ? <Dot/> : <Not/>
          const extra_style = is_selected ? {fontWeight: 'bold'}:{}
          return <FieldTypeWrapper
+            key={`sidebar-${i}`}
             onClick={e => this.select_field(field_type)}>
             {marker}
             <FieldTypeName style={extra_style}>{field_type}</FieldTypeName>

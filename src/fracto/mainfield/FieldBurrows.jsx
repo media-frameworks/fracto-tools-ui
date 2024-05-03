@@ -5,14 +5,14 @@ import styled from "styled-components";
 import network from "common/config/network.json";
 import {CoolTabs, CoolColors, CoolStyles} from 'common/ui/CoolImports';
 
-import FractoUtil from "../common/FractoUtil";
-import FractoCommon from "../common/FractoCommon";
-import {render_coordinates} from '../common/FractoStyles';
+import FractoUtil from "fracto/common/FractoUtil";
+import FractoCommon from "fracto/common/FractoCommon";
+import {render_coordinates} from 'fracto/common/FractoStyles';
 
-import FractoLayeredCanvas from "../common/render/FractoLayeredCanvas";
-import FractoData, {BIN_VERB_COMPLETED} from "../common/data/FractoData";
-import FractoDataLoader from "../common/data/FractoDataLoader";
-import {BIN_VERB_INDEXED, get_ideal_level} from "../common/data/FractoData";
+import FractoData, {BIN_VERB_COMPLETED} from "fracto/common/data/FractoData";
+import FractoDataLoader from "fracto/common/data/FractoDataLoader";
+import {BIN_VERB_INDEXED, get_ideal_level} from "fracto/common/data/FractoData";
+import FractoIncrementalRender from "fracto/common/render/FractoIncrementalRender";
 
 const BURROW_SIZE_PX = 650;
 const STEPS_LIST_WIDTH_PX = 240;
@@ -122,33 +122,6 @@ export class FieldBurrows extends Component {
             this.setState({all_burrows: all_burrows})
          })
    }
-   // save_burrow = (burrow, cb) => {
-   //    const url = `${FRACTO_DB_URL}/new_burrow`;
-   //    const data = {
-   //       name: burrow.name,
-   //       scope: burrow.scope,
-   //       focal_point: JSON.stringify(burrow.focal_point)
-   //    }
-   //    const data_keys = Object.keys(data)
-   //    const encoded_params = data_keys.map(key => {
-   //       return `${key}=${data[key]}`
-   //    })
-   //    const data_url = `${url}?${encoded_params.join('&')}`
-   //    fetch(data_url, {
-   //       body: JSON.stringify(data), // data you send.
-   //       headers: {'Content-Type': 'application/json'},
-   //       method: 'POST',
-   //       mode: 'no-cors', // no-cors, cors, *same-origin
-   //    }).then(function (response) {
-   //       if (response.body) {
-   //          return response.json();
-   //       }
-   //       return ["ok"];
-   //    }).then(function (json_data) {
-   //       console.log("save_burrow", url, json_data)
-   //       cb(`saved ${burrow.name}`)
-   //    });
-   // }
 
    select_burrow = (burrow) => {
       console.log("burrow", burrow)
@@ -237,12 +210,14 @@ export class FieldBurrows extends Component {
       if (selected_burrow) {
          focal_point = JSON.parse(selected_burrow.focal_point)
       }
-      const burrow = !selected_burrow ? '' : <FractoLayeredCanvas
+      const burrow = !selected_burrow ? '' : <FractoIncrementalRender
          width_px={BURROW_SIZE_PX}
          scope={scope}
          level={burrow_level}
          aspect_ratio={1.0}
          focal_point={focal_point}
+         incremental_depth={2}
+         on_plan_complete={buffer => console.log("unhandled plan complete")}
       />
       const cq_code = FractoUtil.CQ_code_from_point(focal_point.x, focal_point.y)
       const core_point = render_coordinates(focal_point.x, focal_point.y);
@@ -256,22 +231,12 @@ export class FieldBurrows extends Component {
       const details = detail_info.map(detail => {
          return <CoolStyles.Block>{detail}</CoolStyles.Block>
       })
-      const harvested = ''// : <FractoLayeredCanvas
-      //    width_px={BURROW_MAX_SIZE}
-      //    aspect_ratio={1}
-      //    level={highest_level}
-      //    scope={selected_burrow.scope}
-      //    focal_point={focal_point}
-      //    high_quality={true}
-      //    save_filename={selected_burrow.name}
-      // />
       return [
          <FieldWrapper>
             <ListWrapper>{burrows_list}</ListWrapper>
             <BurrowWrapper>{burrow}</BurrowWrapper>
             <DetailsWrapper>{details}</DetailsWrapper>
-         </FieldWrapper>,
-         harvested
+         </FieldWrapper>
       ]
    }
 }

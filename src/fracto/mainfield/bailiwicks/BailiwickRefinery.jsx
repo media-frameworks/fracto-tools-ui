@@ -7,13 +7,14 @@ import Complex from "common/math/Complex";
 
 import FractoUtil from "fracto/common/FractoUtil";
 import FractoMruCache from "fracto/common/data/FractoMruCache";
-import FractoLayeredCanvas from "fracto/common/render/FractoLayeredCanvas";
+import FractoIncrementalRender from "fracto/common/render/FractoIncrementalRender";
 import FractoData, {get_ideal_level} from "fracto/common/data/FractoData";
 
 import BailiwickList from "./BailiwickList";
-import BailiwickData from "./BailiwickData";
+import BailiwickData from "fracto/common/data/BailiwickData";
 import BailiwickDetails from "./BailiwickDetails";
 import BailiwickTabs from "./BailiwickTabs";
+import FractoLevelSlider from "../../common/render/FractoLevelSlider";
 
 const BAILIWICK_SIZE_PX = 650;
 const BAILIWICKS_LIST_WIDTH_PX = 300;
@@ -75,6 +76,7 @@ export class BailiwickRefinery extends Component {
       detect_y: 0,
       display_settings: {},
       detect_tiles: [],
+      canvas_updating: true
    };
 
    select_bailiwick = (bailiwick, freeform_index) => {
@@ -86,7 +88,8 @@ export class BailiwickRefinery extends Component {
          highest_level: highest_level,
          display_level: display_level,
          freeform_index: freeform_index,
-         display_settings: display_settings
+         display_settings: display_settings,
+         canvas_updating: true
       })
    }
 
@@ -113,9 +116,15 @@ export class BailiwickRefinery extends Component {
       console.log("change_display_settings", display_settings)
       if (!display_settings) {
          const bailiwick_settings = JSON.parse(selected_bailiwick.display_settings)
-         this.setState({display_settings: bailiwick_settings})
+         this.setState({
+            display_settings: bailiwick_settings,
+            canvas_updating: true
+         })
       } else {
-         this.setState({display_settings: display_settings})
+         this.setState({
+            display_settings: display_settings,
+            canvas_updating: true
+         })
       }
    }
 
@@ -277,11 +286,26 @@ export class BailiwickRefinery extends Component {
       })
    }
 
+   set_level = (level) => {
+      const {display_settings} = this.state
+      let new_display_settings = JSON.parse(JSON.stringify(display_settings))
+      new_display_settings.scope = Math.pow(2, 5 - level)
+      this.setState({
+         highest_level: level,
+         display_settings: new_display_settings,
+         canvas_updating: true
+      })
+   }
+
+   on_plan_complete = (canvas_buffer) =>{
+      this.setState({canvas_updating: false})
+   }
+
    render() {
       const {
          selected_bailiwick, freeform_index,
          highest_level, hover_point, wrapper_ref,
-         detect_pattern, detect_iteration, detect_y, detect_x, in_detect, display_settings
+         detect_pattern, detect_iteration, detect_y, detect_x, in_detect, display_settings,canvas_updating
       } = this.state
       const {width_px} = this.props
       const bailiwick_list = <BailiwickListWrapper>
@@ -294,13 +318,15 @@ export class BailiwickRefinery extends Component {
          const hover_node = !hover_point || in_detect ? [] : [JSON.parse(hover_point.location)]
          const detect_node = !in_detect ? [] : [{x: detect_x, y: detect_y}]
          const display_level = get_ideal_level(BAILIWICK_SIZE_PX, display_settings.scope, 2.0);
-         bailiwick = <FractoLayeredCanvas
+         bailiwick = <FractoIncrementalRender
             width_px={BAILIWICK_SIZE_PX}
             scope={display_settings.scope}
             level={display_level}
             aspect_ratio={1.0}
             focal_point={display_settings.focal_point}
             highlight_points={in_detect ? detect_node : hover_node}
+            incremental_depth={2}
+            on_plan_complete={this.on_plan_complete}
          />
          const detect_object = {
             in_detect: in_detect,
@@ -326,6 +352,15 @@ export class BailiwickRefinery extends Component {
             />
          </DetailsWrapper>
       }
+      const level_slider = <CoolStyles.InlineBlock
+         key={'transit-levels-wrapper'}>
+         <FractoLevelSlider
+            selected_level={highest_level}
+            on_change={value => this.set_level(value)}
+            height_px={BAILIWICK_SIZE_PX}
+            in_wait={canvas_updating}
+         />
+      </CoolStyles.InlineBlock>
       return [
          <FieldWrapper>
             <ListWrapper>{bailiwick_list}</ListWrapper>
@@ -335,6 +370,7 @@ export class BailiwickRefinery extends Component {
                onMouseMove={e => this.on_mouse_over(e)}>
                {bailiwick}
             </BailiwickWrapper>
+            {level_slider}
             {details}
             <RefineLink onClick={e => this.refine_bailiwick()}>{"refine"}</RefineLink>
          </FieldWrapper>,

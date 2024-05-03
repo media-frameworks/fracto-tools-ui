@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 import {CoolStyles} from "../../../common/ui/CoolImports";
 import {render_pattern_block, render_coordinates} from "../../common/FractoStyles";
-import BailiwickData from "./BailiwickData";
+import BailiwickData from "fracto/common/data/BailiwickData";
 import FractoUtil from "../../common/FractoUtil";
 import FractoCalc from "../../common/data/FractoCalc";
 
